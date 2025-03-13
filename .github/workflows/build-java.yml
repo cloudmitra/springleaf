@@ -17,35 +17,15 @@ jobs:
   build:
     runs-on: ubuntu-latest  # You can also use other OS like 'windows-latest' or 'macos-latest'
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2  # Checkout the repository code
-
-      - name: Set up JDK
-        uses: actions/setup-java@v2
-        with:
-          java-version: ${{ github.event.inputs.java-version }}  # Uses the java version selected in the workflow dispatch
-          distribution: 'adoptopenjdk'  # Optional: You can use a different distribution if needed
-
-      - name: Build with Maven
-        run: mvn clean install -DskipTests=true  # Build the project (without running tests)
-
-      - name: Run tests with Maven
-        run: mvn test  # Run unit tests
-
-      - name: Build and package Spring Boot app
-        run: mvn package  # Optional: You can skip this if you just want to build and test
-
-      - name: Upload test results
-        if: success()  # Only uploads if tests were successful
-        uses: actions/upload-artifact@v2
-        with:
-          name: test-results
-          path: target/test-classes  # Path to test results (can be adjusted based on your configuration)
-
-      - name: Archive build artifacts
-        if: success()
-        uses: actions/upload-artifact@v2
-        with:
-          name: spring-boot-app
-          path: target/*.jar  # Adjust the path if your artifact is different
+  steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-java@v4
+    with:
+      java-version: '17'
+      distribution: 'temurin'
+  - run: mvn --batch-mode --update-snapshots verify
+  - run: mkdir staging && cp target/*.jar staging
+  - uses: actions/upload-artifact@v4
+    with:
+      name: Package
+      path: staging
